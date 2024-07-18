@@ -1,3 +1,5 @@
+// Fix not working with java 21
+
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -85,6 +87,8 @@ tasks {
 }
 
 java {
+    withJavadocJar()
+    withSourcesJar()
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }

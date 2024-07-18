@@ -43,9 +43,6 @@ public interface BiomeLock {
      * The lock state is then set to the value provided as the method argument.
      *
      * @param isLocked The new lock state for the biome registry.
-     * @throws ClassNotFoundException if the RegistryMaterials class cannot be found.
-     * @throws IllegalAccessException if the boolean field in the RegistryMaterials class cannot be accessed.
-     *
      * @version 0.0.1
      */
     @AsOf("0.0.1")
