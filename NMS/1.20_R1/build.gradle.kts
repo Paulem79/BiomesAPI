@@ -1,9 +1,17 @@
 plugins {
-    id("io.papermc.paperweight.userdev") version "1.5.11"
+    id("io.github.patrick.remapper") version "1.+"
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.20-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot:1.20.1-R0.1-SNAPSHOT:remapped-mojang")
 
     compileOnly(project(":NMS:Wrapper"))
+}
+
+tasks.remap {
+    version.set("1.20.1")
+}
+
+tasks.build {
+    dependsOn(tasks.remap)
 }

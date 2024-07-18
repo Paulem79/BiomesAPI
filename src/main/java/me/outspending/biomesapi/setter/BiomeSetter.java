@@ -37,18 +37,6 @@ public interface BiomeSetter {
     }
 
     /**
-     * Returns the RegionAccessor for the given location.
-     *
-     * @param location the location
-     * @return the RegionAccessor for the location
-     * @version 0.0.1
-     */
-    @AsOf("0.0.1")
-    default @NotNull RegionAccessor getRegionAccessor(@NotNull Location location) {
-        return location.getWorld();
-    }
-
-    /**
      * Sets the biome of a block to a custom biome.
      *
      * @param block the block

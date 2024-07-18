@@ -2,12 +2,13 @@ package me.outspending.biomesapi.nms;
 
 import me.outspending.biomesapi.annotations.AsOf;
 import me.outspending.biomesapi.exceptions.UnknownNMSVersionException;
-import me.outspending.biomesapi.nms.*;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for handling NMS (Net Minecraft Server) related operations.
@@ -56,14 +57,40 @@ public class NMSHandler {
     static void init() {
         if (isNMSLoaded()) return;
 
-        String version = Bukkit.getMinecraftVersion();
+        String version = getMinecraftVersion();
         switch (version) {
+            case "1.19", "1.19.1", "1.19.2" -> NMS_VERSION = new NMS_v1_19_R1();
             case "1.19.3" -> NMS_VERSION = new NMS_v1_19_R2();
             case "1.19.4" -> NMS_VERSION = new NMS_v1_19_R3();
             case "1.20", "1.20.1" -> NMS_VERSION = new NMS_v1_20_R1();
             case "1.20.2" -> NMS_VERSION = new NMS_v1_20_R2();
             case "1.20.3", "1.20.4" -> NMS_VERSION = new NMS_v1_20_R3();
+            case "1.20.5", "1.20.6" -> NMS_VERSION = new NMS_v1_20_R4();
+            case "1.21" -> NMS_VERSION = new NMS_v1_21_R1();
             default -> throw new UnknownNMSVersionException("The version " + version + " is not supported by BiomesAPI. Make sure you are up-to-date with the latest version of BiomesAPI.");
+        }
+    }
+
+    private static String minecraftVersion;
+
+    /**
+     * Returns the actual running Minecraft version, e.g. 1.20 or 1.16.5
+     *
+     * @return Minecraft version
+     * @version 0.0.2
+     */
+    @AsOf("0.0.2")
+    public static String getMinecraftVersion() {
+        if (minecraftVersion != null) {
+            return minecraftVersion;
+        } else {
+            String bukkitGetVersionOutput = Bukkit.getVersion();
+            Matcher matcher = Pattern.compile("\\(MC: (?<version>[\\d]+\\.[\\d]+(\\.[\\d]+)?)\\)").matcher(bukkitGetVersionOutput);
+            if (matcher.find()) {
+                return minecraftVersion = matcher.group("version");
+            } else {
+                throw new RuntimeException("Could not determine Minecraft version from Bukkit.getVersion(): " + bukkitGetVersionOutput);
+            }
         }
     }
 

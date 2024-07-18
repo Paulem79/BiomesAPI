@@ -1,11 +1,12 @@
 package me.outspending.biomesapi.nms;
 
-import net.minecraft.core.MappedRegistry;
-import net.minecraft.core.Registry;
+import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -16,6 +17,7 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v1_20_R1.CraftChunk;
 import org.bukkit.craftbukkit.v1_20_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_20_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +58,7 @@ public class NMS_v1_20_R1 implements NMS {
                 LevelChunk levelChunk = (LevelChunk) ((CraftChunk) chunk).getHandle(ChunkStatus.BIOMES);
                 LevelLightEngine levelLightEngine = levelChunk.getLevel().getLightEngine();
 
-                ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(levelChunk, levelLightEngine, null, null, true);
+                ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(levelChunk, levelLightEngine, null, null);
                 for (Player player : getPlayersInDistance(chunk)) {
                     ((CraftPlayer) player).getHandle().connection.send(packet);
                 }
@@ -121,6 +123,40 @@ public class NMS_v1_20_R1 implements NMS {
     @Override
     public void updateBiome(@NotNull Location minLoc, @NotNull Location maxLoc, @NotNull NamespacedKey namespacedKey) {
 
+    }
+
+    @Override
+    public boolean setBiome(NamespacedKey newBiomeKey, Location location) {
+        Biome base;
+        WritableRegistry<Biome> registrywritable = getRegistry(Registries.BIOME);
+
+        ResourceLocation biomeKey = new ResourceLocation(newBiomeKey.getNamespace(), newBiomeKey.getKey());
+
+        ResourceKey<Biome> rkey = ResourceKey.create(Registries.BIOME, biomeKey);
+        base = registrywritable.get(rkey);
+        if(base == null) {
+            ResourceKey<Biome> newrkey = ResourceKey.create(Registries.BIOME, biomeKey);
+            base = registrywritable.get(newrkey);
+            if(base == null) {
+                return false;
+            }
+        }
+
+        setBiome(location.getBlockX(), location.getBlockY(), location.getBlockZ(), ((CraftWorld)location.getWorld()).getHandle(), base);
+        return true;
+    }
+
+    private void setBiome(int x, int y, int z, Level w, Biome bb) {
+        BlockPos pos = new BlockPos(x, 0, z);
+
+        if (w.isLoaded(pos)) {
+
+            LevelChunk chunk = w.getChunkAt(pos);
+            if (chunk != null) {
+
+                chunk.setBiome(x >> 2, y >> 2, z >> 2, Holder.direct(bb));
+            }
+        }
     }
 
 }

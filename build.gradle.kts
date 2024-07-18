@@ -1,8 +1,9 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
-    id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("io.papermc.paperweight.userdev") version "1.5.11"
-    id("me.champeau.jmh") version "0.7.2"
-    `maven-publish`
+    id("com.github.johnrengelman.shadow") version "8.+"
+    id("io.github.patrick.remapper") version "1.+"
+    id("maven-publish")
     java
 }
 
@@ -11,101 +12,91 @@ allprojects {
     apply(plugin = "maven-publish")
     apply(plugin = "com.github.johnrengelman.shadow")
 
+    dependencies {
+        compileOnly("org.jetbrains:annotations:24.1.0")
+    }
+
     group = "com.github.Outspending"
-    version = "0.0.1"
+    version = "0.0.2"
 
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
     }
 
-    // The file for publication.
-    val reobfBuildFile = project.layout.buildDirectory.file("libs/${project.name}-${project.version}.jar")
-
-    // Check if a project has the reobfJar task.
-    fun Project.usesReobfuscatedJar() : Boolean {
-        return try {
-            tasks.named("reobfJar")
-            true
-        } catch (ignored: UnknownTaskException) {
-            false
-        }
-    }
-
     // needs to be in after evaluate, otherwise the project's reobfJar task (if it exists)
     // won't be there.
     afterEvaluate {
-
-        // publish NMS apis, and the main project API
-        // this is required because consumers require getting the POM
-        // files from this project's dependencies, even if they"re completely
-        // shaded and included in this file.
-        //
-        // not optimal because this leads to more network calls when downloading
-        // the api for the first time. ideally we only publish the main api.
         publishing {
             publications {
                 create<MavenPublication>("maven") {
-                    groupId = "com.github.Outspending"
+                    groupId = "io.github.paulem"
                     artifactId = project.name
-
-                    if (usesReobfuscatedJar()) artifact(reobfBuildFile)
                     from(components["java"])
                 }
             }
-        }
-
-        // Throws an error if we don"t explicitly say we're using the output
-        // of reobfJar in the final build.
-        tasks.named("publishMavenPublicationToMavenLocal") {
-            if (usesReobfuscatedJar()) {
-                dependsOn(tasks.reobfJar)
-            }
-        }
-
-        // Don't use the task if it doesn't exist on this project
-        if (usesReobfuscatedJar()) {
-            tasks.reobfJar {
-                outputJar.set(reobfBuildFile)
-            }
-        }
-
-        // Run reobfJar on applicable projects
-        tasks.assemble {
-            if (usesReobfuscatedJar()) dependsOn(tasks.reobfJar)
         }
     }
 
     repositories {
         mavenCentral()
+        mavenLocal()
         maven {
-            name = "papermc-repo"
-            url = uri("https://repo.papermc.io/repository/maven-public/")
+            url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+
+            // As of Gradle 5.1, you can limit this to only those
+            // dependencies you expect from it
+            content {
+                includeGroup ("org.bukkit")
+                includeGroup ("org.spigotmc")
+            }
         }
         maven {
             name = "sonatype"
             url = uri("https://oss.sonatype.org/content/groups/public/")
         }
     }
-
 }
 
-val nmsVersions = listOf("1.19_R2", "1.19_R3", "1.20_R1", "1.20_R2", "1.20_R3")
+tasks.remap {
+    version.set("1.18")
+}
+
+tasks.build {
+    dependsOn(tasks.remap)
+}
+
+val nmsVersions = listOf("1.19_R1", "1.19_R2", "1.19_R3", "1.20_R1", "1.20_R2", "1.20_R3", "1.20_R4", "1.21_R1")
+// 1.19 - 1.20.6
 dependencies {
-    paperweight.paperDevBundle("1.20-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot:1.18-R0.1-SNAPSHOT:remapped-mojang")
 
     // NMS Implementations
     implementation(project(":NMS:Wrapper"))
     for (version in nmsVersions) {
-        implementation(project(path = ":NMS:${version}", configuration = "reobf"))
+        implementation(project(path = ":NMS:${version}", configuration = "shadow"))
     }
-
-    // JMH Implementations
-    jmh("org.openjdk.jmh:jmh-core:0.9")
-    jmh("org.openjdk.jmh:jmh-generator-annprocess:0.9")
 }
 
+tasks {
+    named<ShadowJar>("shadowJar") {
+        archiveClassifier.set("")
+        mergeServiceFiles()
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+tasks {
+    build {
+        dependsOn(shadowJar)
+    }
+}
 
 tasks.wrapper {
-    gradleVersion = "8.1.1"
+    gradleVersion = "8.9"
     distributionType = Wrapper.DistributionType.ALL
 }

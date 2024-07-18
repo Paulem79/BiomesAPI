@@ -8,17 +8,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v1_20_R3.CraftChunk;
-import org.bukkit.craftbukkit.v1_20_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_21_R1.CraftChunk;
+import org.bukkit.craftbukkit.v1_21_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_21_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * This class provides the implementation for the NMS interface for version 1.20_R3.
  * It provides methods to interact with the game's chunks and biome registry.
  */
-public class NMS_v1_20_R3 implements NMS {
+public class NMS_v1_21_R1 implements NMS {
 
     /**
      * Retrieves the registry for a given key.
@@ -130,7 +130,7 @@ public class NMS_v1_20_R3 implements NMS {
         Biome base;
         WritableRegistry<Biome> registrywritable = getRegistry(Registries.BIOME);
 
-        ResourceLocation biomeKey = new ResourceLocation(newBiomeKey.getNamespace(), newBiomeKey.getKey());
+        ResourceLocation biomeKey = ResourceLocation.fromNamespaceAndPath(newBiomeKey.getNamespace(), newBiomeKey.getKey());
 
         ResourceKey<Biome> rkey = ResourceKey.create(Registries.BIOME, biomeKey);
         base = registrywritable.get(rkey);

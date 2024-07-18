@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import me.outspending.biomesapi.BiomeUpdater;
 import me.outspending.biomesapi.biome.CustomBiome;
 import me.outspending.biomesapi.misc.PointRange3D;
+import me.outspending.biomesapi.nms.NMSHandler;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.util.BoundingBox;
@@ -29,9 +30,8 @@ public class GlobalBiomeSetter implements BiomeSetter {
         Preconditions.checkNotNull(customBiome, "customBiome cannot be null");
 
         Location location = block.getLocation();
-        RegionAccessor accessor = getRegionAccessor(location);
 
-        UNSAFE.setBiomeKey(accessor, location.getBlockX(), location.getBlockY(), location.getBlockZ(), customBiome.toNamespacedKey());
+        NMSHandler.executeNMS(nms -> nms.setBiome(customBiome.toNamespacedKey(), location));
 
         if (updateBiome) {
             BIOME_UPDATER.updateChunk(location.getChunk());
@@ -71,7 +71,8 @@ public class GlobalBiomeSetter implements BiomeSetter {
             for (int y = minHeight; y < maxHeight; y++) {
                 for (int z = minZ; z < maxZ; z++) {
                     // Set the biome of each block to the custom biome
-                    UNSAFE.setBiomeKey(accessor, x, y, z, key);
+                    Location location = new Location(chunk.getWorld(), x, y, z);
+                    NMSHandler.executeNMS(nms -> nms.setBiome(key, location));
                 }
             }
         }
@@ -132,7 +133,8 @@ public class GlobalBiomeSetter implements BiomeSetter {
             for (int x = range.minX(); x <= range.maxX(); x++) {
                 for (int y = range.minY(); y <= range.maxY(); y++) {
                     for (int z = range.minZ(); z <= range.maxZ(); z++) {
-                        UNSAFE.setBiomeKey(world, x, y, z, key);
+                        Location location = new Location(from.getWorld(), x, y, z);
+                        NMSHandler.executeNMS(nms -> nms.setBiome(key, location));
                     }
                 }
             }

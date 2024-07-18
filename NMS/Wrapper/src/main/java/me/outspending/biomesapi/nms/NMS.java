@@ -80,4 +80,5 @@ public interface NMS {
 
     void updateBiome(@NotNull Location minLoc, @NotNull Location maxLoc, @NotNull NamespacedKey namespacedKey);
 
+    boolean setBiome(NamespacedKey biomeKey, Location location);
 }

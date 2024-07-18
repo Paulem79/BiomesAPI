@@ -5,8 +5,6 @@ import me.outspending.biomesapi.annotations.AsOf;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.annotation.Documented;
-
 /**
  * This class represents a key for a biome resource in the game.
  * It uses the @AsOf annotation to indicate the version since the class or its methods have been present or modified.

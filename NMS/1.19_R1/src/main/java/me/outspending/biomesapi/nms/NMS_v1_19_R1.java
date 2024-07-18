@@ -1,24 +1,21 @@
 package me.outspending.biomesapi.nms;
 
 import net.minecraft.core.*;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
+import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.lighting.LevelLightEngine;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v1_20_R3.CraftChunk;
-import org.bukkit.craftbukkit.v1_20_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.*;
+import org.bukkit.craftbukkit.v1_19_R1.CraftChunk;
+import org.bukkit.craftbukkit.v1_19_R1.CraftServer;
+import org.bukkit.craftbukkit.v1_19_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_19_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,10 +25,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
- * This class provides the implementation for the NMS interface for version 1.20_R3.
+ * This class provides the implementation for the NMS interface for version 1.19_R2.
  * It provides methods to interact with the game's chunks and biome registry.
  */
-public class NMS_v1_20_R3 implements NMS {
+public class NMS_v1_19_R1 implements NMS {
 
     /**
      * Retrieves the registry for a given key.
@@ -39,7 +36,7 @@ public class NMS_v1_20_R3 implements NMS {
      * @param key The key for the registry to retrieve.
      * @return The registry associated with the given key.
      */
-    private static <T> MappedRegistry<T> getRegistry(ResourceKey<Registry<T>> key) {
+    private static <T> MappedRegistry<T> getRegistry(ResourceKey<? extends Registry<T>> key) {
         DedicatedServer server = ((CraftServer) Bukkit.getServer()).getServer();
         return (MappedRegistry<T>) server.registryAccess().registryOrThrow(key);
     }
@@ -55,10 +52,10 @@ public class NMS_v1_20_R3 implements NMS {
         CompletableFuture.runAsync(() -> {
 
             for (Chunk chunk : chunks) {
-                LevelChunk levelChunk = (LevelChunk) ((CraftChunk) chunk).getHandle(ChunkStatus.BIOMES);
+                LevelChunk levelChunk = ((CraftChunk) chunk).getHandle();
                 LevelLightEngine levelLightEngine = levelChunk.getLevel().getLightEngine();
 
-                ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(levelChunk, levelLightEngine, null, null);
+                ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(levelChunk, levelLightEngine, null, null, true);
                 for (Player player : getPlayersInDistance(chunk)) {
                     ((CraftPlayer) player).getHandle().connection.send(packet);
                 }
@@ -75,7 +72,7 @@ public class NMS_v1_20_R3 implements NMS {
      */
     @Override
     public void biomeRegistryLock(boolean isLocked) {
-        MappedRegistry<Biome> biomes = getRegistry(Registries.BIOME);
+        MappedRegistry<Biome> biomes = getRegistry(BuiltinRegistries.BIOME.key());
         try {
             Class<?> registryBiomeClass = Class.forName("net.minecraft.core.RegistryMaterials");
             for (Field field : registryBiomeClass.getDeclaredFields()) {
@@ -97,7 +94,7 @@ public class NMS_v1_20_R3 implements NMS {
      */
     @Override
     public void unlockRegistry(@NotNull Supplier<?> supplier) {
-        MappedRegistry<Biome> registry = getRegistry(Registries.BIOME);
+        MappedRegistry<Biome> registry = getRegistry(BuiltinRegistries.BIOME.key());
         biomeRegistryLock(false);
         supplier.get();
         registry.freeze();
@@ -116,7 +113,7 @@ public class NMS_v1_20_R3 implements NMS {
     public @NotNull Registry<Biome> getRegistry() {
         return ((CraftServer) Bukkit.getServer()).getServer()
                 .registryAccess()
-                .registry(Registries.BIOME)
+                .registry(BuiltinRegistries.BIOME.key())
                 .orElseThrow(() -> new RuntimeException("Could not retrieve biome registry"));
     }
 
@@ -128,14 +125,14 @@ public class NMS_v1_20_R3 implements NMS {
     @Override
     public boolean setBiome(NamespacedKey newBiomeKey, Location location) {
         Biome base;
-        WritableRegistry<Biome> registrywritable = getRegistry(Registries.BIOME);
+        WritableRegistry<Biome> registrywritable = getRegistry(BuiltinRegistries.BIOME.key());
 
         ResourceLocation biomeKey = new ResourceLocation(newBiomeKey.getNamespace(), newBiomeKey.getKey());
 
-        ResourceKey<Biome> rkey = ResourceKey.create(Registries.BIOME, biomeKey);
+        ResourceKey<Biome> rkey = ResourceKey.create(BuiltinRegistries.BIOME.key(), biomeKey);
         base = registrywritable.get(rkey);
         if(base == null) {
-            ResourceKey<Biome> newrkey = ResourceKey.create(Registries.BIOME, biomeKey);
+            ResourceKey<Biome> newrkey = ResourceKey.create(BuiltinRegistries.BIOME.key(), biomeKey);
             base = registrywritable.get(newrkey);
             if(base == null) {
                 return false;
@@ -158,5 +155,4 @@ public class NMS_v1_20_R3 implements NMS {
             }
         }
     }
-
 }

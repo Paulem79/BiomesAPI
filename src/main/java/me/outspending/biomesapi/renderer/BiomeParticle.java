@@ -6,6 +6,7 @@ public interface BiomeParticle {
     SimpleParticleType AMBIENT_ENTITY_EFFECT = ParticleTypes.AMBIENT_ENTITY_EFFECT;
     SimpleParticleType ANGRY_VILLAGER = ParticleTypes.ANGRY_VILLAGER;
     ParticleType<BlockParticleOption> BLOCK = ParticleTypes.BLOCK;
+    // TODO : Not available before 1.18
     ParticleType<BlockParticleOption> BLOCK_MARKER = ParticleTypes.BLOCK_MARKER;
     SimpleParticleType BUBBLE = ParticleTypes.BUBBLE;
     SimpleParticleType CLOUD = ParticleTypes.CLOUD;
