@@ -3,7 +3,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "8.+"
+    id("io.github.goooler.shadow") version "8.1.8"
     id("io.github.patrick.remapper") version "1.+"
     id("maven-publish")
     java
@@ -12,7 +12,7 @@ plugins {
 allprojects {
     apply(plugin = "java")
     apply(plugin = "maven-publish")
-    apply(plugin = "com.github.johnrengelman.shadow")
+    apply(plugin = "io.github.goooler.shadow")
 
     dependencies {
         compileOnly("org.jetbrains:annotations:24.1.0")
@@ -90,7 +90,9 @@ java {
     withJavadocJar()
     withSourcesJar()
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        //languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 

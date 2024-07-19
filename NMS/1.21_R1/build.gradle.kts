@@ -15,3 +15,11 @@ tasks.remap {
 tasks.build {
     dependsOn(tasks.remap)
 }
+
+java {
+    toolchain {
+        //sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_17
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
